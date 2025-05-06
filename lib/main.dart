@@ -1,3 +1,4 @@
+// version 2.0 
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -318,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 // === RESUMEN DE GASTOS ===
-// === RESUMEN DE GASTOS ===
+
 class ExpenseSummaryScreen extends StatefulWidget {
   @override
   _ExpenseSummaryScreenState createState() => _ExpenseSummaryScreenState();
@@ -508,7 +509,12 @@ class AddExpenseScreen extends StatefulWidget {
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _titleCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
+  final _categoryCtrl = TextEditingController();
+  final _dateCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  String _category = "Empresarial"; // Default category
+  DateTime _selectedDate = DateTime.now(); // Default date is today
 
   @override
   void initState() {
@@ -516,7 +522,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (widget.initial != null) {
       _titleCtrl.text = widget.initial!.title;
       _amountCtrl.text = widget.initial!.amount.toString();
+      // If it's an edit, you can populate the category and date as well
+      // Assuming Expense will have category and date fields
+      // _category = widget.initial!.category;
+      // _selectedDate = widget.initial!.date;
     }
+  }
+
+  // Function to pick a date
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    ) ?? _selectedDate;
+    
+    if (picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+        _dateCtrl.text = "${_selectedDate.toLocal()}".split(' ')[0]; // Format: yyyy-MM-dd
+      });
   }
 
   void _save() {
@@ -544,6 +570,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch, // Alinear los elementos
                 children: [
+                  // Descripción
                   TextFormField(
                     controller: _titleCtrl,
                     decoration: InputDecoration(
@@ -558,6 +585,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 20),
+                  
+                  // Monto
                   TextFormField(
                     controller: _amountCtrl,
                     decoration: InputDecoration(
@@ -577,7 +606,50 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     },
                     style: TextStyle(fontSize: 16),
                   ),
+                  SizedBox(height: 20),
+                  
+                  // Categoría (Dropdown)
+                  DropdownButtonFormField<String>(
+                    value: _category,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _category = newValue!;
+                      });
+                    },
+                    validator: (v) => v == null || v.isEmpty ? 'Seleccione categoría' : null,
+                    decoration: InputDecoration(
+                      labelText: 'Categoría',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: "Empresarial", child: Text("Empresarial")),
+                      DropdownMenuItem(value: "Personal", child: Text("Personal")),
+                      DropdownMenuItem(value: "No aplica", child: Text("No aplica")), // Nueva opción
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  
+                  // Fecha
+                  TextFormField(
+                    controller: _dateCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Fecha',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    readOnly: true, // Hacerlo solo lectura
+                    onTap: () => _selectDate(context),
+                    validator: (v) => v == null || v.isEmpty ? 'Seleccione una fecha' : null,
+                    style: TextStyle(fontSize: 16),
+                  ),
                   SizedBox(height: 30),
+                  
+                  // Botón Guardar
                   ElevatedButton(
                     onPressed: _save,
                     style: ElevatedButton.styleFrom(
