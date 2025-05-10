@@ -88,7 +88,7 @@ class WelcomeScreen extends StatelessWidget {
             Text(
               'Bienvenido a FinanzApp',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: const Color.fromARGB(255, 43, 81, 148),
               ),
@@ -495,7 +495,7 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
             // Listar los gastos dentro de un contenedor con un ancho limitado al 85% de la pantalla
             Expanded(
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+                width: MediaQuery.of(context).size.width * 0.65, // 65% del ancho de la pantalla
                 child: ListView.builder(
                   itemCount: _expenses.length,
                   itemBuilder: (_, i) {
@@ -574,8 +574,8 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
             ),
             // Texto del botón de "Evaluar Presupuesto"
             Text(
-              'Evaluar Presupuesto',
-              style: TextStyle(fontSize: 12),
+              'Evaluar Gasto',
+              style: TextStyle(fontSize: 11),
             ),
           ],
         ),
