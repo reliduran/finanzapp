@@ -381,7 +381,7 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
   Future<void> _loadExpenses() async {
     final prefs = await SharedPreferences.getInstance();
     _userEmail = prefs.getString('session') ?? '';
-    
+
     // Cargar los usuarios para obtener el nombre
     final userData = prefs.getStringList('users') ?? [];
     final users = userData
@@ -460,15 +460,35 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Resumen de Gastos'),
-        backgroundColor: Colors.blueAccent,  // Asegurando el mismo tono azul que en la bienvenida
+        backgroundColor: Colors.blueAccent, // Asegurando el mismo tono azul que en la bienvenida
         automaticallyImplyLeading: false, // Desactiva la flecha de retroceso
         actions: [
-          // Ícono de cerrar sesión
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: _logout,
-            color: Colors.white,
-          )
+          // Agregar los botones "Agregar Gasto" y "Evaluar Gasto" en una fila
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.add),
+                onPressed: _addExpense, // Función de agregar gasto
+                color: Colors.white,
+              ),
+              IconButton(
+                icon: Icon(Icons.account_balance_wallet),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => SalaryInputScreen()), // Navegar a la pantalla de ingreso de salario
+                  );
+                },
+                color: Colors.white,
+              ),
+              // Ícono de cerrar sesión
+              IconButton(
+                icon: Icon(Icons.exit_to_app),
+                onPressed: _logout,
+                color: Colors.white,
+              ),
+            ],
+          ),
         ],
       ),
       body: Padding(
@@ -492,10 +512,10 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
-            // Listar los gastos dentro de un contenedor con un ancho limitado al 85% de la pantalla
+            // Listar los gastos dentro de un contenedor con un ancho limitado al 90% de la pantalla
             Expanded(
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.65, // 65% del ancho de la pantalla
+                width: MediaQuery.of(context).size.width * 0.90, // 90% del ancho de la pantalla
                 child: ListView.builder(
                   itemCount: _expenses.length,
                   itemBuilder: (_, i) {
@@ -538,51 +558,10 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
           ],
         ),
       ),
-      floatingActionButton: Align(
-        alignment: Alignment.bottomRight, // Alineamos todo al borde inferior derecho
-        child: Column(
-          mainAxisSize: MainAxisSize.min, // Ajustamos el tamaño de la columna
-          children: [
-            // Botón para agregar gastos
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12.0), // Espacio entre botones
-              child: FloatingActionButton(
-                onPressed: _addExpense,
-                child: Icon(Icons.add),
-                backgroundColor: Colors.green, // Color coherente con el registro
-              ),
-            ),
-            // Texto del botón de "Agregar Gasto"
-            Text(
-              'Agregar Gasto',
-              style: TextStyle(fontSize: 12),
-            ),
-            SizedBox(height: 16), // Separación entre los botones
-            // Botón para agregar salario
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12.0), // Espacio entre botones
-              child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => SalaryInputScreen()), // Navegar a la pantalla de ingreso de salario
-                  );
-                },
-                child: Icon(Icons.account_balance_wallet),
-                backgroundColor: Colors.blueAccent,
-              ),
-            ),
-            // Texto del botón de "Evaluar Presupuesto"
-            Text(
-              'Evaluar Gasto',
-              style: TextStyle(fontSize: 11),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
+
 // FIN RESUMEN DE GASTOS
 
 
@@ -882,5 +861,5 @@ class _SalaryInputScreenState extends State<SalaryInputScreen> {
     );
   }
 }
-//GRACIAS A DIOS CODIGO FINALIZADO 10.05.2025 01:58 AM
+//GRACIAS A DIOS CODIGO FINALIZADO 10.05.2025 03:19 AM
 //BENDICIONES A MI HIJO ANTONIO ELI DURAN LAZARO
