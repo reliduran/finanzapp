@@ -41,19 +41,32 @@ class User {
 class Expense {
   String title;
   double amount;
+  String category;  // Propiedad 'category'
+  DateTime date;    // Propiedad 'date'
 
-  Expense({required this.title, required this.amount});
+  Expense({
+    required this.title, 
+    required this.amount,
+    required this.category,
+    required this.date,
+    });
 
   Map<String, dynamic> toMap() => {
         'title': title,
         'amount': amount,
+        'category': category,
+         'date': date.toIso8601String(),  // Convierte la fecha a String
       };
 
-  factory Expense.fromMap(Map<String, dynamic> map) =>
-      Expense(title: map['title'], amount: map['amount']);
+  factory Expense.fromMap(Map<String, dynamic> map) {
+      return Expense(
+        title: map['title'], 
+        amount: map['amount'],
+        category: map['category'],
+        date: DateTime.parse(map['date']),  // Convierte de String a DateTime
+        );
+  }
 }
-
-// === BIENVENIDA ===
 
 // === BIENVENIDA ===
 class WelcomeScreen extends StatelessWidget {
@@ -67,13 +80,13 @@ class WelcomeScreen extends StatelessWidget {
             // Logo centrado en la pantalla con un tamaño proporcional
             Image.asset(
               'assets/logo.png',  // Ruta correcta del logo
-              width: 250, // Ancho deseado, puedes ajustarlo
-              height: 250, // Alto deseado, puedes ajustarlo
+              width: 180, // Ancho deseado, puedes ajustarlo
+              height: 180, // Alto deseado, puedes ajustarlo
               fit: BoxFit.contain, // Mantener la proporción del logo
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 20),
             Text(
-              'Bienvenidos a FinanzApp',
+              'Bienvenido a FinanzApp',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -122,7 +135,7 @@ class WelcomeScreen extends StatelessWidget {
                 "Desarrollado para DAM TSU 2025 por Grupo 13",
                 style: TextStyle(
                   fontSize: 12, // Tamaño de fuente discreto
-                  color: Colors.grey, // Color suave para discreción
+                  color: const Color.fromARGB(255, 45, 44, 44), // Color suave para discreción
                 ),
               ),
             ),
@@ -209,19 +222,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           : null;
                     },
                   ),
+                  
                   TextFormField(
                     controller: _emailCtrl,
                     decoration: InputDecoration(labelText: 'Correo'),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Ingrese un correo' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) { 
+                        return 'Ingrese un correo';
+                      } 
+
+                      // Expresión regular para validar el formato del correo
+                      final emailRegex = RegExp(
+                        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+                      );
+
+                      if (!emailRegex.hasMatch(v)) {
+                        return 'Correo inválido';
+                      }
+                      
+                      return null;
+                    },
                   ),
                   TextFormField(
                     controller: _passCtrl,
                     decoration: InputDecoration(labelText: 'Contraseña'),
                     obscureText: true,
-                    validator: (v) => v == null || v.isEmpty
-                        ? 'Ingrese una contraseña'
-                        : null,
+                    validator: (v) { 
+                      if (v == null || v.isEmpty) {
+                        return 'Ingrese una contraseña';
+                      }
+
+                      // Expresión regular para validar contraseña
+                      // - Al menos una letra (mayúscula o minúscula)
+                      // - Al menos un número
+                      final passwordRegex = RegExp(r'^(?=.*[a-zA-Z])(?=.*\d).{8,}$');
+
+                      if (!passwordRegex.hasMatch(v)) {
+                        return 'La contraseña debe tener al menos 8 caracteres, y contener letras y números';
+                      }
+
+                      return null;
+                    },
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
@@ -318,8 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// === RESUMEN DE GASTOS ===
-
+//RESUMEN DE GASTOS
 class ExpenseSummaryScreen extends StatefulWidget {
   @override
   _ExpenseSummaryScreenState createState() => _ExpenseSummaryScreenState();
@@ -434,11 +474,11 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,  // Alinea a la izquierda
           children: [
             // Mostrar nombre y correo del usuario
             Text(
-              'Usuario: $_userName ($_userEmail)',
+              'Bienvenido: $_userName ($_userEmail)',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent),
             ),
             SizedBox(height: 20),
@@ -452,50 +492,101 @@ class _ExpenseSummaryScreenState extends State<ExpenseSummaryScreen> {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
-            // Listar los gastos
+            // Listar los gastos dentro de un contenedor con un ancho limitado al 85% de la pantalla
             Expanded(
-              child: ListView.builder(
-                itemCount: _expenses.length,
-                itemBuilder: (_, i) {
-                  final e = _expenses[i];
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16),
-                      title: Text(e.title, style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Monto: \$${e.amount.toStringAsFixed(2)}'),
-                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                        IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () => _editExpense(i)),
-                        IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => _deleteExpense(i)),
-                      ]),
-                    ),
-                  );
-                },
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.85, // 85% del ancho de la pantalla
+                child: ListView.builder(
+                  itemCount: _expenses.length,
+                  itemBuilder: (_, i) {
+                    final e = _expenses[i];
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 8),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(16),
+                        title: Text(e.title, style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Monto: \$${e.amount.toStringAsFixed(2)}'),
+                            Text('Categoría: ${e.category}'),  // Mostrar la categoría
+                            Text('Fecha: ${e.date.toLocal().toString().split(' ')[0]}'),  // Mostrar la fecha
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () => _editExpense(i)),
+                            SizedBox(width: 10), // Espacio entre los iconos
+                            IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () => _deleteExpense(i)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addExpense,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.green, // Color coherente con el registro
+      floatingActionButton: Align(
+        alignment: Alignment.bottomRight, // Alineamos todo al borde inferior derecho
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Ajustamos el tamaño de la columna
+          children: [
+            // Botón para agregar gastos
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0), // Espacio entre botones
+              child: FloatingActionButton(
+                onPressed: _addExpense,
+                child: Icon(Icons.add),
+                backgroundColor: Colors.green, // Color coherente con el registro
+              ),
+            ),
+            // Texto del botón de "Agregar Gasto"
+            Text(
+              'Agregar Gasto',
+              style: TextStyle(fontSize: 12),
+            ),
+            SizedBox(height: 16), // Separación entre los botones
+            // Botón para agregar salario
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0), // Espacio entre botones
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => SalaryInputScreen()), // Navegar a la pantalla de ingreso de salario
+                  );
+                },
+                child: Icon(Icons.account_balance_wallet),
+                backgroundColor: Colors.blueAccent,
+              ),
+            ),
+            // Texto del botón de "Evaluar Presupuesto"
+            Text(
+              'Evaluar Presupuesto',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+// FIN RESUMEN DE GASTOS
 
 
-// === AGREGAR / EDITAR GASTO ===
-// === AGREGAR / EDITAR GASTO ===
+// === AGREGAR / EDITAR GNavigator.push(ASTO ===
 class AddExpenseScreen extends StatefulWidget {
   final Expense? initial;
   final Function(Expense) onSave;
@@ -513,7 +604,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _dateCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  String _category = "Empresarial"; // Default category
+  String _category = "No aplica"; // Default category
   DateTime _selectedDate = DateTime.now(); // Default date is today
 
   @override
@@ -522,14 +613,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (widget.initial != null) {
       _titleCtrl.text = widget.initial!.title;
       _amountCtrl.text = widget.initial!.amount.toString();
-      // If it's an edit, you can populate the category and date as well
-      // Assuming Expense will have category and date fields
-      // _category = widget.initial!.category;
-      // _selectedDate = widget.initial!.date;
+      _category = widget.initial!.category; // Aquí cargamos la categoría del registro
+      _selectedDate = widget.initial!.date; // Aquí cargamos la fecha del registro
+      _dateCtrl.text = "${_selectedDate.toLocal()}".split(' ')[0]; // Actualiza el campo de fecha con el valor del registro
     }
   }
 
-  // Function to pick a date
+  // Función para seleccionar la fecha
   Future<void> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
       context: context,
@@ -541,18 +631,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (picked != _selectedDate)
       setState(() {
         _selectedDate = picked;
-        _dateCtrl.text = "${_selectedDate.toLocal()}".split(' ')[0]; // Format: yyyy-MM-dd
+        _dateCtrl.text = "${_selectedDate.toLocal()}".split(' ')[0]; // Formato: yyyy-MM-dd
       });
   }
 
+  // Función para guardar
   void _save() {
     if (_formKey.currentState!.validate()) {
       final expense = Expense(
         title: _titleCtrl.text,
         amount: double.parse(_amountCtrl.text),
+        category: _category,  // Se pasa la categoría seleccionada
+        date: _selectedDate,  // Se pasa la fecha seleccionada
       );
-      widget.onSave(expense);
-      Navigator.pop(context);
+      widget.onSave(expense);  // Llamada al callback con el objeto 'expense'
+      Navigator.pop(context);  // Volver a la pantalla anterior
     }
   }
 
@@ -561,14 +654,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Agregar / Editar Gasto'),
-          backgroundColor: Colors.blueAccent, // Color coherente con la pantalla de bienvenida
+          backgroundColor: Colors.blueAccent,
         ),
         body: Padding(
           padding: EdgeInsets.all(16),
           child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch, // Alinear los elementos
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Descripción
                   TextFormField(
@@ -585,7 +678,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 20),
-                  
+
                   // Monto
                   TextFormField(
                     controller: _amountCtrl,
@@ -607,13 +700,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 20),
-                  
+
                   // Categoría (Dropdown)
                   DropdownButtonFormField<String>(
                     value: _category,
                     onChanged: (newValue) {
                       setState(() {
-                        _category = newValue!;
+                        _category = newValue!;  // Se actualiza la categoría
                       });
                     },
                     validator: (v) => v == null || v.isEmpty ? 'Seleccione categoría' : null,
@@ -627,11 +720,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     items: [
                       DropdownMenuItem(value: "Empresarial", child: Text("Empresarial")),
                       DropdownMenuItem(value: "Personal", child: Text("Personal")),
-                      DropdownMenuItem(value: "No aplica", child: Text("No aplica")), // Nueva opción
+                      DropdownMenuItem(value: "No aplica", child: Text("No aplica")),
                     ],
                   ),
                   SizedBox(height: 20),
-                  
+
                   // Fecha
                   TextFormField(
                     controller: _dateCtrl,
@@ -648,12 +741,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 30),
-                  
+
                   // Botón Guardar
                   ElevatedButton(
                     onPressed: _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green, // Consistente con otros botones
+                      backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -668,3 +761,126 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ));
   }
 }
+
+// INGRESO DE SUELDO
+class SalaryInputScreen extends StatefulWidget {
+  @override
+  _SalaryInputScreenState createState() => _SalaryInputScreenState();
+}
+
+class _SalaryInputScreenState extends State<SalaryInputScreen> {
+  final _salaryCtrl = TextEditingController();
+  double _salary = 0.0;
+  double _totalExpenses = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTotalExpenses();
+  }
+
+  Future<void> _loadTotalExpenses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('session') ?? '';
+    final data = prefs.getStringList('expenses_${userEmail}') ?? [];
+
+    setState(() {
+      _totalExpenses = data
+          .map((e) => Expense.fromMap(json.decode(e)))
+          .fold(0, (sum, e) => sum + e.amount); // Calcular el total de los gastos
+    });
+  }
+
+  void _calculateExcess() {
+    double excess = _salary - _totalExpenses;
+
+    // Mostrar el resultado
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Resultado"),
+          content: Text(
+            excess < 0
+                ? "¡Excediste tu presupuesto en \$${(-excess).toStringAsFixed(2)}!"
+                : "Te sobra \$${excess.toStringAsFixed(2)} del presupuesto mensual.",
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Cerrar"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _saveSalary() async {
+    // Validar si el sueldo ingresado es válido
+    if (_salaryCtrl.text.isEmpty || double.tryParse(_salaryCtrl.text) == null) {
+      // Mostrar un mensaje de error si el valor es inválido o vacío
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text("Por favor, ingresa tu sueldo."),
+            actions: <Widget>[
+              TextButton(
+                child: Text("Cerrar"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+      return; // Detener la ejecución si el sueldo es inválido
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('salary', double.parse(_salaryCtrl.text));
+    _calculateExcess();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ingresar tu Sueldo'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _salaryCtrl,
+              decoration: InputDecoration(
+                labelText: 'Sueldo Mensual',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                setState(() {
+                  _salary = double.tryParse(value) ?? 0.0;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveSalary,
+              child: Text("Evaluar tu Presupuesto"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+//GRACIAS A DIOS CODIGO FINALIZADO 10.05.2025 01:58 AM
+//BENDICIONES A MI HIJO ANTONIO ELI DURAN LAZARO
